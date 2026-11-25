@@ -18,6 +18,15 @@ const hint = document.querySelector('#hint');
 const turnMarble = document.querySelector('#turn-marble');
 const playerList = document.querySelector('#players');
 const cells = new Map();
+const computerPlayers = new Set([3]);
+const progressLabels = new Map();
+const svgNamespace = 'http://www.w3.org/2000/svg';
+const trails = document.createElementNS(svgNamespace, 'svg');
+trails.setAttribute('class', 'jump-trails');
+trails.setAttribute('viewBox', '0 0 100 100');
+trails.setAttribute('preserveAspectRatio', 'none');
+trails.setAttribute('aria-hidden', 'true');
+board.append(trails);
 const key = (q, r) => q + ',' + r;
 const opposite = team => (team + 3) % 6;
 let players, turn, selected, visited, winner, timer, focusCell, moves, canPass;
@@ -41,9 +50,11 @@ for (const [r, size] of lineSizes.entries()) {
     marble.className = 'marble';
     marble.setAttribute('aria-hidden', 'true');
     button.append(marble);
-    button.style.setProperty('--x', (50 + x * 7.45) + '%');
-    button.style.setProperty('--y', (5 + r * 5.625) + '%');
-    const cell = { q, r, col, camp, button, marble, team: null };
+    const left = 50 + x * 7.45;
+    const top = 5 + r * 5.625;
+    button.style.setProperty('--x', left + '%');
+    button.style.setProperty('--y', top + '%');
+    const cell = { q, r, col, camp, left, top, button, marble, team: null };
     cells.set(key(q, r), cell);
     button.addEventListener('click', () => play(cell));
     button.addEventListener('focus', () => {
@@ -92,12 +103,27 @@ function goalCount(team) {
 }
 
 function isComputer() {
-  return mode.value === 'cpu' && turn === 3;
+  return computerPlayers.has(turn);
+}
+
+function showJump(path) {
+  const trail = document.createElementNS(svgNamespace, 'g');
+  const line = document.createElementNS(svgNamespace, 'polyline');
+  const start = document.createElementNS(svgNamespace, 'circle');
+  trail.setAttribute('class', 'jump-trail');
+  trail.style.color = teams[turn].color;
+  line.setAttribute('points', path.map(cell => cell.left + ',' + cell.top).join(' '));
+  start.setAttribute('cx', path[0].left);
+  start.setAttribute('cy', path[0].top);
+  start.setAttribute('r', '0.85');
+  trail.append(line, start);
+  trail.addEventListener('animationend', () => trail.remove(), { once: true });
+  trails.append(trail);
 }
 
 function render() {
   const thinking = isComputer() && winner === null;
-  moves = selected ? legalMoves(selected, visited.size > 0, visited) : new Map();
+  moves = selected && !thinking ? legalMoves(selected, visited.size > 0, visited) : new Map();
   const available = new Set();
   if (!thinking && winner === null && !visited.size) {
     for (const cell of cells.values()) {
@@ -139,17 +165,38 @@ function render() {
   finish.textContent = canPass ? 'Pass turn' : 'End turn';
   finish.disabled = winner !== null || thinking || (!visited.size && !canPass);
 
+  for (const [team, progress] of progressLabels) {
+    progress.textContent = goalCount(team) + ' / 10';
+  }
+}
+
+function renderPlayerControls() {
+  progressLabels.clear();
   playerList.replaceChildren(...players.map(team => {
     const row = document.createElement('li');
     const piece = document.createElement('span');
     const name = document.createElement('span');
     const progress = document.createElement('span');
+    const control = document.createElement('select');
     piece.className = 'marble';
     piece.setAttribute('aria-hidden', 'true');
     piece.style.setProperty('--color', teams[team].color);
-    name.textContent = teams[team].name + (mode.value === 'cpu' && team === 3 ? ' · CPU' : '');
-    progress.textContent = goalCount(team) + ' / 10';
-    row.append(piece, name, progress);
+    name.textContent = teams[team].name;
+    progress.className = 'goal-progress';
+    progressLabels.set(team, progress);
+    control.setAttribute('aria-label', teams[team].name + ' player type');
+    control.add(new Option('Human', 'human'));
+    control.add(new Option('Computer', 'computer'));
+    control.value = computerPlayers.has(team) ? 'computer' : 'human';
+    control.addEventListener('change', () => {
+      if (control.value === 'computer') computerPlayers.add(team);
+      else computerPlayers.delete(team);
+      if (team === turn) {
+        render();
+        scheduleComputer();
+      }
+    });
+    row.append(piece, name, progress, control);
     return row;
   }));
 }
@@ -161,6 +208,7 @@ function play(cell) {
     selected.team = null;
     cell.team = turn;
     if (action === 'jump') {
+      showJump([selected, cell]);
       visited.add(selected);
       visited.add(cell);
     }
@@ -179,38 +227,55 @@ function advance() {
   if (goalCount(turn) === 10) winner = turn;
   else turn = players[(players.indexOf(turn) + 1) % players.length];
   render();
-  if (winner === null && isComputer()) timer = setTimeout(computerTurn, 450);
+  scheduleComputer();
+}
+
+function scheduleComputer() {
+  clearTimeout(timer);
+  if (winner === null && isComputer()) timer = setTimeout(computerTurn, 750);
 }
 
 function computerTurn() {
+  const continuing = visited.size > 0;
+  const goal = opposite(turn);
+  const oneAway = goalCount(turn) === 9;
+  const targets = [...cells.values()].filter(cell => cell.camp === goal);
+  const tip = targets.reduce((furthest, cell) =>
+    Math.hypot(cell.left - 50, cell.top - 50) > Math.hypot(furthest.left - 50, furthest.top - 50)
+      ? cell : furthest);
+  // Axial coordinates keep the computer's strategy consistent across all six arms.
+  const distance = cell => {
+    const dq = cell.q - tip.q;
+    const dr = cell.r - tip.r;
+    return Math.sqrt(dq * dq + dq * dr + dr * dr);
+  };
   let best = null;
-  for (const origin of cells.values()) {
+  for (const origin of continuing ? [selected] : cells.values()) {
     if (origin.team !== turn) continue;
     const occupant = cell => cell === origin ? null : cell.team;
-    const explored = new Set([origin]);
-    const pending = [];
-    const consider = destination => {
-      const entersGoal = Number(destination.camp === opposite(turn)) - Number(origin.camp === opposite(turn));
-      const sideways = Math.abs(destination.q + destination.r / 2) - Math.abs(origin.q + origin.r / 2);
-      const score = (origin.r - destination.r) * 3 + entersGoal * 12 - sideways * .4 + Math.random();
-      if (!best || score > best.score) best = { origin, destination, score };
-    };
-    for (const [destination, action] of legalMoves(origin, false, explored)) {
-      consider(destination);
-      if (action === 'jump') {
-        pending.push(destination);
-        explored.add(destination);
+    const explored = new Set([...visited, origin]);
+    const pending = [[origin]];
+    const consider = (path, destination, action) => {
+      const entersGoal = Number(destination.camp === goal) - Number(origin.camp === goal);
+      const score = oneAway && entersGoal === 1
+        ? Infinity : (distance(origin) - distance(destination)) * 3 + entersGoal * 12 + Math.random();
+      if ((!continuing || score > 0) && (!best || score > best.score)) {
+        best = { origin, destination, score, path: action === 'jump' ? [...path, destination] : null };
       }
-    }
-    for (const landing of pending) {
-      for (const destination of legalMoves(landing, true, explored, occupant).keys()) {
-        consider(destination);
-        pending.push(destination);
-        explored.add(destination);
+    };
+    for (const path of pending) {
+      const landing = path[path.length - 1];
+      for (const [destination, action] of legalMoves(landing, continuing || landing !== origin, explored, occupant)) {
+        consider(path, destination, action);
+        if (action === 'jump') {
+          pending.push([...path, destination]);
+          explored.add(destination);
+        }
       }
     }
   }
   if (best) {
+    if (best.path) showJump(best.path);
     best.origin.team = null;
     best.destination.team = turn;
   }
@@ -218,14 +283,16 @@ function computerTurn() {
 }
 
 function reset() {
-  clearTimeout(timer);
-  players = { cpu: [0, 3], 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 6: [0, 1, 2, 3, 4, 5] }[mode.value];
+  players = { 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 6: [0, 1, 2, 3, 4, 5] }[mode.value];
   turn = players[0];
   selected = null;
   visited = new Set();
   winner = null;
+  trails.replaceChildren();
   for (const cell of cells.values()) cell.team = players.includes(cell.camp) ? cell.camp : null;
+  renderPlayerControls();
   render();
+  scheduleComputer();
 }
 
 finish.addEventListener('click', () => {

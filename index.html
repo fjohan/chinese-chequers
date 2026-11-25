@@ -20,26 +20,25 @@
       </section>
       <aside>
         <section class="panel">
-          <label for="mode">Game mode</label>
+          <label for="mode">Number of players</label>
           <select id="mode">
-            <option value="cpu">Play the computer</option>
-            <option value="2">2 players · pass &amp; play</option>
-            <option value="3">3 players · pass &amp; play</option>
-            <option value="4">4 players · pass &amp; play</option>
-            <option value="6">6 players · pass &amp; play</option>
+            <option value="2">2 players</option>
+            <option value="3">3 players</option>
+            <option value="4">4 players</option>
+            <option value="6">6 players</option>
           </select>
           <div class="turn" aria-live="polite">
             <span id="turn-marble" class="marble" aria-hidden="true"></span>
             <div><h2 id="turn"></h2><p id="hint"></p></div>
           </div>
           <button id="finish" class="primary">End turn</button>
-          <ul id="players" aria-label="Marbles in each player's goal"></ul>
+          <ul id="players" aria-label="Player controls and goal progress"></ul>
         </section>
         <details class="panel">
           <summary>How to play</summary>
           <p>Move all ten of your marbles into the matching triangle across the board.</p>
           <p>Tap a marble, then tap a highlighted hole. You can step into an adjacent hole or jump over any marble into an empty hole immediately beyond it.</p>
-          <p>After a jump, keep jumping with the same marble or choose <strong>End turn</strong>. Pass the device after each turn in local multiplayer.</p>
+          <p>After a jump, keep jumping with the same marble or choose <strong>End turn</strong>. Set any player to Human or Computer during the game.</p>
         </details>
       </aside>
     </div>
