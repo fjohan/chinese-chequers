@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101e21">
+  <title>Chinese Chequers</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Chinese <em>Chequers</em></h1>
+      <button id="restart" class="secondary">New game</button>
+    </header>
+    <div class="layout">
+      <section class="table" aria-label="Game board">
+        <div id="board" role="group" aria-label="Chinese Chequers board"></div>
+      </section>
+      <aside>
+        <section class="panel">
+          <label for="mode">Game mode</label>
+          <select id="mode">
+            <option value="cpu">Play the computer</option>
+            <option value="2">2 players · pass &amp; play</option>
+            <option value="3">3 players · pass &amp; play</option>
+            <option value="4">4 players · pass &amp; play</option>
+            <option value="6">6 players · pass &amp; play</option>
+          </select>
+          <div class="turn" aria-live="polite">
+            <span id="turn-marble" class="marble" aria-hidden="true"></span>
+            <div><h2 id="turn"></h2><p id="hint"></p></div>
+          </div>
+          <button id="finish" class="primary">End turn</button>
+          <ul id="players" aria-label="Marbles in each player's goal"></ul>
+        </section>
+        <details class="panel">
+          <summary>How to play</summary>
+          <p>Move all ten of your marbles into the matching triangle across the board.</p>
+          <p>Tap a marble, then tap a highlighted hole. You can step into an adjacent hole or jump over any marble into an empty hole immediately beyond it.</p>
+          <p>After a jump, keep jumping with the same marble or choose <strong>End turn</strong>. Pass the device after each turn in local multiplayer.</p>
+        </details>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
