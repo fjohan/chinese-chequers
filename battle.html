@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101e21">
+  <title>Battle Rules · Chinese Chequers</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Battle <em>Rules</em></h1>
+      <a class="rules-link" href="index.html">Back to game</a>
+    </header>
+    <p class="rules-intro">Choose <strong>Battle</strong> in the Rules menu. Each team starts with one starred heavy marble in the middle of its row of three. A heavy marble can only step into an adjacent empty hole. Win by getting all ten marbles into your goal.</p>
+    <div class="rules-grid">
+      <section class="panel">
+        <h2>Radial knockback</h2>
+        <div class="diagram" role="img" aria-label="The coral heavy marble steps right. The teal marbles above-right and right fly away from the landing hole.">
+          <span class="push-arrow" style="--x:14%;--y:65%">→</span>
+          <span class="marble heavy coral" style="--x:33%;--y:65%"></span>
+          <span class="marble teal" style="--x:47%;--y:35%"></span>
+          <span class="push-arrow" style="--x:57%;--y:25%">↗</span>
+          <span class="hole-mark" style="--x:67%;--y:15%"></span>
+          <span class="marble teal" style="--x:57%;--y:65%"></span>
+          <span class="push-arrow" style="--x:70%;--y:65%">→</span>
+          <span class="hole-mark" style="--x:84%;--y:65%"></span>
+        </div>
+        <p>Adjacent opponents are pushed one hole directly away from the landing hole. Resolve the opponents closest to the direction of travel first, with clockwise order breaking ties. Teammates resist the initial hit, and heavy marbles resist all knockback.</p>
+      </section>
+      <section class="panel">
+        <h2>Chain reactions</h2>
+        <div class="diagram" role="img" aria-label="A teal marble pushed by a coral heavy marble passes the force into another coral marble, which slides into the empty hole.">
+          <span class="marble heavy coral" style="--x:13%;--y:50%"></span>
+          <span class="marble teal" style="--x:37%;--y:50%"></span>
+          <span class="push-arrow" style="--x:49%;--y:50%">→</span>
+          <span class="marble coral" style="--x:62%;--y:50%"></span>
+          <span class="push-arrow" style="--x:74%;--y:50%">→</span>
+          <span class="hole-mark" style="--x:87%;--y:50%"></span>
+        </div>
+        <p>If the next hole is occupied, the force carries through the line to the first empty hole. Every marble in the chain moves one hole, including teammates. A heavy marble blocks the chain and can deflect the push.</p>
+      </section>
+      <section class="panel">
+        <h2>Edge deflection</h2>
+        <div class="diagram" role="img" aria-label="At the top tip of the board, the teal marble cannot go outward. It deflects down-right into the empty hole beside the heavy marble.">
+          <span class="edge-mark"></span>
+          <span class="marble teal" style="--x:50%;--y:28%"></span>
+          <span class="push-arrow" style="--x:61%;--y:47%">↘</span>
+          <span class="marble heavy coral" style="--x:35%;--y:68%"></span>
+          <span class="hole-mark" style="--x:67%;--y:68%"></span>
+        </div>
+        <p>When the straight route is blocked or runs off the board, use the shortest chain to an empty hole. Ties favor the outward direction, then the heavy marble’s direction of travel. The game tries to leave other opponents adjacent to the blast in place for their own pushes.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
